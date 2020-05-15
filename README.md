@@ -270,7 +270,7 @@ as previously mentioned we are unable to provide any support for this
 feature.
 
 
-## Main Task: Ataxx AI (COMP1100 XX Marks; COMP1130 YY Marks)
+## Main Task: Ataxx AI (COMP1100 55 Marks; COMP1130 65 Marks)
 
 Implement an AI (of type `AIFunc`, defined in `src/AI.hs`). There is a
 list called `ais` in that file, and we will mark the AI you call
