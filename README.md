@@ -115,6 +115,9 @@ need to write tests in `src/AITests.hs`.
 * `src/AtaxxTests.hs` implements some unit tests for the Ataxx
   game. You are welcome to read through it.
 
+* `src/AITests.hs` is an empty file for you to write tests for your
+  AI.
+
 * `src/Testing.hs` is a simple test framework like the one in
   Assignment 2. It has been extended so that you can group related
   tests together for clarity.
@@ -418,13 +421,13 @@ explore deeper within the time limit it has to make its move.
 
 As with Assignment 2, you will be expected to write unit tests to
 convince yourself that your code is correct. The testing code has been
-extended from last time - `test/Testing.hs` now allows you to group
+extended from last time - `src/Testing.hs` now allows you to group
 tests into a tree structure. As before, you run the tests using `cabal
-test`.
+v2-test`.
 
 ### Your Task
 
-Add tests to `test/AttaxTest.hs` that test your AI.
+Add tests to `src/AttaxTest.hs` that test your AI.
 
 #### Hints
 
