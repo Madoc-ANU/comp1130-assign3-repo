@@ -28,5 +28,27 @@ ais = [ ("firstLegalMove", NoLookahead firstLegalMove)
 -- 'legalMoves' function. AIs can rely on the 'legalMoves' list being
 -- non-empty; if there were no legal moves, the framework would have
 -- ended the game.
+
+{-|##################
+
+locatoin1 :: Location
+locatoin1 = Location 3 4
+move1 :: Move
+move1 = Move locatoin1 locatoin1
+
+calcMoveValue :: GameState -> Move
+calcMoveValue _ = move1
+heur :: GameState -> Int
+heur _ = 0
+
+-}
+
+{-| add a function which selects a random move from legalMoves
+
+selectMove :: Int -> GameState -> Move
+legalMoves n st = (pickMoves st) (legalMoves st)
+
+-}
+
 firstLegalMove :: GameState -> Move
 firstLegalMove st = head (legalMoves st)
