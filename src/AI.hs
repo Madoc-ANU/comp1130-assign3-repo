@@ -43,11 +43,16 @@ heur _ = 0
 
 -}
 
-{-| add a function which selects a random move from legalMoves
+{-| add a function which selects a random move from legalMoves-
 
 selectMove :: Int -> GameState -> Move
-legalMoves n st = (pickMoves st) (legalMoves st)
+legalMoves n st = (legalMoves st)
 
+
+
+--run through moveset
+
+runFunc :: [Move] -> Int
 -}
 
 firstLegalMove :: GameState -> Move
