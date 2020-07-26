@@ -28,7 +28,7 @@ firstLegalMove :: GameState -> Move
 firstLegalMove st = head (legalMoves st)
 
 protoType :: GameState -> Move
-protoType st = head (moveSelect 3 (legalMoves st))
+protoType st = head (moveSelect 10 (legalMoves st))
 
 -- | A very simple AI, which picks the first move returned by the
 -- 'legalMoves' function. AIs can rely on the 'legalMoves' list being
@@ -38,23 +38,73 @@ protoType st = head (moveSelect 3 (legalMoves st))
 caclHeur :: GameState -> Int
 caclHeur st = fst (countPieces st) - snd (countPieces st) + (squareValue st)
 
-sumList :: [a]
-
 squareValue :: GameState -> Int
-squareValue st = foldl' count (0,0) (concat (board st))
-  where
-    count :: (Int, Int) -> Square -> (Int, Int)
-    count (p1,p2) sq = case sq of
-        Piece Player1 ->
+squareValue st = countFunction 0 0 (board st)
 
-squareValue ::
---minMax :: Int -> [Move] -> Int
---minMax acc (x:xs) =
+countFunction :: Int -> Int -> Board -> Int
+countFunction acc _ [] = acc
+countFunction acc ref (x:xs) = case ref of
+  0 -> countFunction acc (ref+1) xs
+  8 -> countFunction acc (ref+1) xs
+  _ -> countFunction (acc+1) (ref+1) xs
 
-moveValue :: Move -> Int
-moveValue m = 1
+countLine :: Int -> Int -> [Square] -> Int
+countLine acc _ [] = acc
+countLine acc ref (x:xs) = case ref of
+  0 -> countFunction acc (ref+1) xs
+  8 -> countFunction acc (ref+1) xs
+  _ -> countFunction (acc+1) (ref+1) xs
+
+readSquare :: Square -> Int
+readSquare sq = case sq of
+  Piece Player1 -> 0
+  Piece Player2 -> 1
+  Block -> 2
+  Empty -> 3
+
+  --EvalMovesSystem
+
+readMove :: Move -> Int
+readMove _ -> 0
+
+evalMoveList :: [Move] -> [Int]
+evalMoveList (x:xs) output = (readMove x):output
+
+findHighest :: [Int] -> Int -> Int
+findHighest (x:xs) acc = do
 
 moveSelect :: Integer -> [Move] -> [Move]
 moveSelect _ [] = []
 moveSelect 1 (x:xs) = x:[]
 moveSelect n (x:xs) = moveSelect (n-1) xs
+
+--Location-> square
+
+locSquare :: GameState -> Location -> Square
+locSquare st (Location x y) = lookup x y (board st)
+
+lookup :: Int -> Int -> Board -> Square
+lookup 0 y (n:ns) = n
+lookup x y (n:ns) = lookup (x-1) y (n:ns)
+
+find :: Int -> [Square] -> Square
+find 0 (n:ns) = n
+find x (n:ns) = find (x-1) (n:ns)
+
+--How many enemies next to locatoin?
+
+enCount :: Location -> Int
+enCount l =
+
+genAdjacent :: Int -> Int -> [Square]
+genAd
+
+squareCycle ::
+
+enCheck :: Square -> Bool
+enCheck s = case s of
+  Piece Player2 -> True
+  _ -> False
+
+--minMax :: Int -> [Move] -> Int
+--minMax acc (x:xs) =
