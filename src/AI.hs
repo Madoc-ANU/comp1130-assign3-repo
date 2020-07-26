@@ -21,7 +21,7 @@ data AIFunc
 -- "default" in this table is the one your tutor will dedicate most of
 -- his or her attention to marking.
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("protoType", NoLookahead protoType)
       ]
 
 -- | A very simple AI, which picks the first move returned by the
@@ -43,17 +43,13 @@ heur _ = 0
 
 -}
 
-{-| add a function which selects a random move from legalMoves-
-
-selectMove :: Int -> GameState -> Move
-legalMoves n st = (legalMoves st)
-
-
-
---run through moveset
-
-runFunc :: [Move] -> Int
--}
+moveSelect :: Integer -> [Move] -> [Move]
+moveSelect _ [] = []
+moveSelect 1 (x:xs) = x:[]
+moveSelect n (x:xs) = moveSelect (n-1) xs
 
 firstLegalMove :: GameState -> Move
-firstLegalMove st = head (legalMoves st)
+firstLegalMove st = head (moveSelect 3 (legalMoves st))
+
+protoType :: GameState -> Move
+protoType st = head (moveSelect 2 (legalMoves st))
