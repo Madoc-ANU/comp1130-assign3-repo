@@ -35,6 +35,16 @@ protoType st = head (moveSelect 10 (legalMoves st))
 -- non-empty; if there were no legal moves, the framework would have
 -- ended the game.
 
+
+--accessors
+getL1 (Move l1 _) = l1
+getL2 (Move _ l2) = l2
+
+getX (Location x _) = x
+getY (Location _ y) = y
+
+--main functions
+
 caclHeur :: GameState -> Int
 caclHeur st = fst (countPieces st) - snd (countPieces st) + (squareValue st)
 
@@ -65,46 +75,90 @@ readSquare sq = case sq of
   --EvalMovesSystem
 
 readMove :: Move -> Int
-readMove _ -> 0
+readMove _ = 0
 
 evalMoveList :: [Move] -> [Int]
 evalMoveList (x:xs) output = (readMove x):output
 
 findHighest :: [Int] -> Int -> Int
-findHighest (x:xs) acc = do
+findHighest _ high ref = high
+findHighest (x:xs) 0 ref = x
+findHighest (x:xs) high ref = case x of
+  x > high -> find
+  _ -> findHighest (x:xs)
 
 moveSelect :: Integer -> [Move] -> [Move]
 moveSelect _ [] = []
 moveSelect 1 (x:xs) = x:[]
 moveSelect n (x:xs) = moveSelect (n-1) xs
 
---Location-> square
+--Location -> square
 
 locSquare :: GameState -> Location -> Square
 locSquare st (Location x y) = lookup x y (board st)
 
 lookup :: Int -> Int -> Board -> Square
-lookup 0 y (n:ns) = n
-lookup x y (n:ns) = lookup (x-1) y (n:ns)
+lookup x 0 (n:ns) = find x n
+lookup x y (n:ns) = lookup (x) (y-1) (n:ns)
 
 find :: Int -> [Square] -> Square
 find 0 (n:ns) = n
 find x (n:ns) = find (x-1) (n:ns)
 
 --How many enemies next to locatoin?
+adjSquares :: Location -> [Location] -> [Location]
+adjSquares (Location x y) output = do
+  if onBoard st (Location (x+1) y)
+    then do(Location (x+1) y):output
+    else
+  if onBoard st (Location (x-1) y)
+    then do(Location (x-1) (y)):output
+    else
+  if onBoard st (Location (x+1) (y-1))
+    then do(Location (x+1) y):output
+    else
+  if onBoard st (Location (x-1) (y-1))
+    then do(Location (x-1) (y)):output
+    else
+  if onBoard st (Location (x+1) (y+1))
+    then do(Location (x+1) y):output
+    else
+  if onBoard st (Location (x-1) (y+1))
+    then do(Location (x-1) (y)):output
+    else
+  if onBoard st (Location (x) (y+1))
+    then do(Location (x+1) y):output
+    else
+  if onBoard st (Location (x) (y+1))
+    then do(Location (x-1) (y)):output
+    else
+  return output
 
-enCount :: Location -> Int
-enCount l =
+adjSquares2 :: Location -> [Location] -> [Location]
+adjSquares2 l (x:xs) = if (chebyshev l) == 1 do x:adjSquares l xs else do adjSquares xs
 
-genAdjacent :: Int -> Int -> [Square]
-genAd
+  Location x y -> [ Location (x + x') (y + y')
+                  | x' <- [-1..1]
+                  , y' <- [-1..1]
+                  , x' /= 0 || y' /= 0
+                  ]
 
-squareCycle ::
 
-enCheck :: Square -> Bool
+enCount :: GameState -> Location -> Int
+enCount st (Location x y) = enCheck(lookup x y (board st))
+
+{-|could use case of here?
+genAdjacent :: GameState -> Int -> Int -> [Square]
+genAdjacent st x y = []
+-}
+
+squareCycle :: [Square] -> Int
+squareCycle (x:xs) = enChekc(x) + squareCycle xs
+
+enCheck :: Square -> Int
 enCheck s = case s of
-  Piece Player2 -> True
-  _ -> False
+  Piece Player2 -> 1
+  _ -> 0
 
 --minMax :: Int -> [Move] -> Int
 --minMax acc (x:xs) =
