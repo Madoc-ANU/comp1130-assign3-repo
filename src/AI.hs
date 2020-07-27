@@ -8,18 +8,9 @@ module AI where
 
 import Ataxx
 
--- | Type of AI functions you can choose to write.
 data AIFunc
   = NoLookahead (GameState -> Move)
-    -- ^ Simple AIs that do not need lookahead.
   | WithLookahead (GameState -> Int -> Move)
-    -- ^ AIs that want to look ahead. The assignment framework will
-    -- call the function over and over with increasing integer
-    -- arguments @1, 2, 3, ...@ until your AI's time limit is up.
-
--- | The table of all AIs that your assignment provides. The AI named
--- "default" in this table is the one your tutor will dedicate most of
--- his or her attention to marking.
 ais :: [(String, AIFunc)]
 ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("protoType", NoLookahead protoType)
       ]
@@ -30,11 +21,41 @@ firstLegalMove st = head (legalMoves st)
 protoType :: GameState -> Move
 protoType st = head (moveSelect 10 (legalMoves st))
 
--- | A very simple AI, which picks the first move returned by the
--- 'legalMoves' function. AIs can rely on the 'legalMoves' list being
--- non-empty; if there were no legal moves, the framework would have
--- ended the game.
+greedy :: GameState -> Move
+greedy st = head (moveSelect (evalMoves (legalMoves st) (legalMoves st))
 
+--greedy
+
+evalMoves :: [Moves] -> [Int]
+evalMoves [] = []
+evalMoves (x:xs) = evalMove x:evalMoves xs
+
+evalMove :: Move -> GameState -> Int
+evalMove m st = sumAdjEn (getL2 m) (board st)
+
+sumAdjEn :: Location -> Board -> Int
+sumAdjEn :: 
+
+locList :: Location -> [Location] -> [Location]
+locList = loc (x:xs) - chebList loc x:locList xs
+
+chebList :: Location -> Locatoin -> [Location]
+chebList l1 l2 = case (chebshev l1 l2) of
+  1 -> [l2]
+  0 -> []
+
+--Location -> square
+
+locSquare :: GameState -> Location -> Square
+locSquare st (Location x y) = lookup x y (board st)
+
+lookup :: Int -> Int -> Board -> Square
+lookup x 0 (n:ns) = find x n
+lookup x y (n:ns) = lookup (x) (y-1) (n:ns)
+
+find :: Int -> [Square] -> Square
+find 0 (n:ns) = n
+find x (n:ns) = find (x-1) (n:ns)
 
 --accessors
 getL1 (Move l1 _) = l1
@@ -44,7 +65,6 @@ getX (Location x _) = x
 getY (Location _ y) = y
 
 --main functions
-
 caclHeur :: GameState -> Int
 caclHeur st = fst (countPieces st) - snd (countPieces st) + (squareValue st)
 
@@ -73,12 +93,11 @@ readSquare sq = case sq of
   Empty -> 3
 
   --EvalMovesSystem
+evalMoveList :: [Move] -> [Int]
+evalMoveList (x:xs) output = (readMove x):output
 
 readMove :: Move -> Int
 readMove m = adjSquares (getL1 m)
-
-evalMoveList :: [Move] -> [Int]
-evalMoveList (x:xs) output = (readMove x):output
 
 findHighest :: [Int] -> Int -> Int
 findHighest [] high ref = ref
@@ -92,38 +111,15 @@ moveSelect _ [] = []
 moveSelect 1 (x:xs) = x:[]
 moveSelect n (x:xs) = moveSelect (n-1) xs
 
---Location -> square
 
-locSquare :: GameState -> Location -> Square
-locSquare st (Location x y) = lookup x y (board st)
-
-lookup :: Int -> Int -> Board -> Square
-lookup x 0 (n:ns) = find x n
-lookup x y (n:ns) = lookup (x) (y-1) (n:ns)
-
-find :: Int -> [Square] -> Square
-find 0 (n:ns) = n
-find x (n:ns) = find (x-1) (n:ns)
 
 --How many enemies next to locatoin?
 adjSquares :: Location -> [Location] -> [Location]
 adjSquares l (x:xs) = if (chebyshev l) == 1 then do x:adjSquares l xs else do adjSquares xs
 
-  Location x y -> [ Location (x + x') (y + y')
-                  | x' <- [-1..1]
-                  , y' <- [-1..1]
-                  , x' /= 0 || y' /= 0
-                  ]
-
-
 enCount :: [Location] -> Int
 enCount [] = []
 enCount (x:xs) = if (enCheck x) == 1 then do x:enCount l xs else do enCount xs
-
-{-|could use case of here?
-genAdjacent :: GameState -> Int -> Int -> [Square]
-genAdjacent st x y = []
--}
 
 squareCycle :: [Square] -> Int
 squareCycle (x:xs) = enChekc(x) + squareCycle xs
@@ -135,3 +131,10 @@ enCheck s = case s of
 
 --minMax :: Int -> [Move] -> Int
 --minMax acc (x:xs) =
+
+{-|
+adjEn :: Location -> Int
+adjEn l = sumAdjEn let
+  name = expression
+  in expression
+-}
