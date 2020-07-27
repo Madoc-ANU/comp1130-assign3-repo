@@ -12,17 +12,42 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("protoType", NoLookahead protoType), ("greedy", NoLookahead greedy)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove)
       ]
 
 firstLegalMove :: GameState -> Move
 firstLegalMove st = head (legalMoves st)
-
+{-
 protoType :: GameState -> Move
 protoType st = head (moveSelect 10 (legalMoves st))
 
 greedy :: GameState -> Move
 greedy st = head (moveSelect (head(evalMoves (legalMoves st) st)) (legalMoves st))
+-}
+
+--only works if AI is player 1
+calcHeur :: GameState -> Int
+calcHeur st = fst (countPieces st) - snd (countPieces st) + valueBoard st
+
+valueBoard :: GameState -> Int
+valueBoard st = 0
+  where b = board st
+
+testMove :: Move -> GameState -> Int
+testMove m st = calcHeur (applyMove m tempState)
+  where tempState = st
+
+makeMoveSet :: GameState -> [(Move, Int)]
+makeMoveSet st = zip ml vl
+  where ml = legalMoves st
+        vl = func ml
+          where func :: [Move] -> [Int]
+                func [] = []
+                func (x:xs) = testMove x : ml xs
+
+
+
+{- version 2
 --greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
 --greedy TroubleShooting
 testLoc :: Location
@@ -121,6 +146,7 @@ getX :: Location -> Int
 getX (Location x _) = x
 getY :: Location -> Int
 getY (Location _ y) = y
+-}
 
 {-EvalMovesSystem
 evalMoveList :: [Move] -> [Int]
