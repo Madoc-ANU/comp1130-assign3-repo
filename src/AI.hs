@@ -34,12 +34,24 @@ evalMove :: Move -> GameState -> Int
 evalMove m st = sumAdjEn (getL2 m) (board st)
 
 sumAdjEn :: Location -> Board -> Int
-sumAdjEn :: 
+sumAdjEn ::
 
-locList :: Location -> [Location] -> [Location]
-locList = loc (x:xs) - chebList loc x:locList xs
+readLocations :: [Location] -> Int
+readLocations (x:xs) = readSFL x:
 
-chebList :: Location -> Locatoin -> [Location]
+readSquareFromLoc :: Location -> GameState -> Int
+readSFL l st = readSqaure (locSquare st l)
+
+readSquare :: Square -> Int
+readSquare sq = case sq of
+  Piece Player2 -> 1
+  _ -> 0
+
+--List of Locations adjacent to a location
+adjLoc :: Location -> [Location] -> [Location]
+locList = loc (x:xs) - chebList loc x:locList xs]
+
+chebList :: Location -> Location -> [Location]
 chebList l1 l2 = case (chebshev l1 l2) of
   1 -> [l2]
   0 -> []
@@ -85,12 +97,6 @@ countLine acc ref (x:xs) = case ref of
   8 -> countFunction acc (ref+1) xs
   _ -> countFunction (acc+1) (ref+1) xs
 
-readSquare :: Square -> Int
-readSquare sq = case sq of
-  Piece Player1 -> 0
-  Piece Player2 -> 1
-  Block -> 2
-  Empty -> 3
 
   --EvalMovesSystem
 evalMoveList :: [Move] -> [Int]
