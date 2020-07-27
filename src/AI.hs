@@ -75,15 +75,15 @@ readSquare sq = case sq of
   --EvalMovesSystem
 
 readMove :: Move -> Int
-readMove _ = 0
+readMove m = adjSquares (getL1 m)
 
 evalMoveList :: [Move] -> [Int]
 evalMoveList (x:xs) output = (readMove x):output
 
 findHighest :: [Int] -> Int -> Int
-findHighest _ high ref = high
+findHighest [] high ref = ref
 findHighest (x:xs) 0 ref = x
-findHighest (x:xs) high ref = case x of
+findHighest (x:xs) high ref = if x > high then do findHighest xs x (ref+1) else do findHighest xs high (ref+1)
   x > high -> find
   _ -> findHighest (x:xs)
 
@@ -107,35 +107,7 @@ find x (n:ns) = find (x-1) (n:ns)
 
 --How many enemies next to locatoin?
 adjSquares :: Location -> [Location] -> [Location]
-adjSquares (Location x y) output = do
-  if onBoard st (Location (x+1) y)
-    then do(Location (x+1) y):output
-    else
-  if onBoard st (Location (x-1) y)
-    then do(Location (x-1) (y)):output
-    else
-  if onBoard st (Location (x+1) (y-1))
-    then do(Location (x+1) y):output
-    else
-  if onBoard st (Location (x-1) (y-1))
-    then do(Location (x-1) (y)):output
-    else
-  if onBoard st (Location (x+1) (y+1))
-    then do(Location (x+1) y):output
-    else
-  if onBoard st (Location (x-1) (y+1))
-    then do(Location (x-1) (y)):output
-    else
-  if onBoard st (Location (x) (y+1))
-    then do(Location (x+1) y):output
-    else
-  if onBoard st (Location (x) (y+1))
-    then do(Location (x-1) (y)):output
-    else
-  return output
-
-adjSquares2 :: Location -> [Location] -> [Location]
-adjSquares2 l (x:xs) = if (chebyshev l) == 1 do x:adjSquares l xs else do adjSquares xs
+adjSquares l (x:xs) = if (chebyshev l) == 1 then do x:adjSquares l xs else do adjSquares xs
 
   Location x y -> [ Location (x + x') (y + y')
                   | x' <- [-1..1]
@@ -144,8 +116,9 @@ adjSquares2 l (x:xs) = if (chebyshev l) == 1 do x:adjSquares l xs else do adjSqu
                   ]
 
 
-enCount :: GameState -> Location -> Int
-enCount st (Location x y) = enCheck(lookup x y (board st))
+enCount :: [Location] -> Int
+enCount [] = []
+enCount (x:xs) = if (enCheck x) == 1 then do x:enCount l xs else do enCount xs
 
 {-|could use case of here?
 genAdjacent :: GameState -> Int -> Int -> [Square]
