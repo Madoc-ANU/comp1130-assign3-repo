@@ -22,25 +22,33 @@ protoType :: GameState -> Move
 protoType st = head (moveSelect 10 (legalMoves st))
 
 greedy :: GameState -> Move
-greedy st = head (moveSelect (evalMoves (legalMoves st) (legalMoves st))
+greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
 
 --greedy
+moveSelect :: Int -> [Move] -> [Move]
+moveSelect _ [] = []
+moveSelect 1 (x:xs) = x:[]
+moveSelect n (x:xs) = moveSelect (n-1) xs
 
-evalMoves :: [Moves] -> [Int]
-evalMoves [] = []
-evalMoves (x:xs) = evalMove x:evalMoves xs
+unPack :: [a] -> a
+unPack (x:xs) = x
+
+evalMoves :: [Move] -> GameState -> [Int]
+evalMoves [] _ = []
+evalMoves (x:xs) st = evalMove x st: evalMoves xs st
 
 evalMove :: Move -> GameState -> Int
 evalMove m st = sumAdjEn (getL2 m) (board st)
 
 sumAdjEn :: Location -> Board -> Int
-sumAdjEn ::
+sumAdjEn _ _ = 0
 
-readLocations :: [Location] -> Int
-readLocations (x:xs) = readSFL x:
+readLocations :: [Location] -> GameState -> [Int]
+readLocations [] _ = []
+readLocations (x:xs) st = readSFL x st :readLocations xs st
 
-readSquareFromLoc :: Location -> GameState -> Int
-readSFL l st = readSqaure (locSquare st l)
+readSFL :: Location -> GameState -> Int
+readSFL l st = readSquare (locSquare st l)
 
 readSquare :: Square -> Int
 readSquare sq = case sq of
@@ -49,21 +57,22 @@ readSquare sq = case sq of
 
 --List of Locations adjacent to a location
 adjLoc :: Location -> [Location] -> [Location]
-locList = loc (x:xs) - chebList loc x:locList xs]
+adjLoc _ [] = []
+adjLoc loc (x:xs) = unPack(chebList loc x): adjLoc loc xs
 
 chebList :: Location -> Location -> [Location]
-chebList l1 l2 = case (chebshev l1 l2) of
+chebList l1 l2 = case (chebyshev l1 l2) of
   1 -> [l2]
   0 -> []
 
 --Location -> square
 
 locSquare :: GameState -> Location -> Square
-locSquare st (Location x y) = lookup x y (board st)
+locSquare st (Location x y) = myLookup x y (board st)
 
-lookup :: Int -> Int -> Board -> Square
-lookup x 0 (n:ns) = find x n
-lookup x y (n:ns) = lookup (x) (y-1) (n:ns)
+myLookup :: Int -> Int -> Board -> Square
+myLookup x 0 (n:ns) = find x n
+myLookup x y (n:ns) = myLookup (x) (y-1) (n:ns)
 
 find :: Int -> [Square] -> Square
 find 0 (n:ns) = n
@@ -76,7 +85,17 @@ getL2 (Move _ l2) = l2
 getX (Location x _) = x
 getY (Location _ y) = y
 
+{-EvalMovesSystem
+evalMoveList :: [Move] -> [Int]
+evalMoveList (x:xs) output = (readMove x):output
+
+readMove :: Move -> Int
+readMove m = adjSquares (getL1 m)
+-}
+
+
 --main functions
+{-|}
 caclHeur :: GameState -> Int
 caclHeur st = fst (countPieces st) - snd (countPieces st) + (squareValue st)
 
@@ -96,28 +115,20 @@ countLine acc ref (x:xs) = case ref of
   0 -> countFunction acc (ref+1) xs
   8 -> countFunction acc (ref+1) xs
   _ -> countFunction (acc+1) (ref+1) xs
+-}
 
 
-  --EvalMovesSystem
-evalMoveList :: [Move] -> [Int]
-evalMoveList (x:xs) output = (readMove x):output
-
-readMove :: Move -> Int
-readMove m = adjSquares (getL1 m)
-
+{-|}
 findHighest :: [Int] -> Int -> Int
 findHighest [] high ref = ref
 findHighest (x:xs) 0 ref = x
 findHighest (x:xs) high ref = if x > high then do findHighest xs x (ref+1) else do findHighest xs high (ref+1)
   x > high -> find
   _ -> findHighest (x:xs)
-
-moveSelect :: Integer -> [Move] -> [Move]
-moveSelect _ [] = []
-moveSelect 1 (x:xs) = x:[]
-moveSelect n (x:xs) = moveSelect (n-1) xs
+-}
 
 
+{-}
 
 --How many enemies next to locatoin?
 adjSquares :: Location -> [Location] -> [Location]
@@ -125,16 +136,16 @@ adjSquares l (x:xs) = if (chebyshev l) == 1 then do x:adjSquares l xs else do ad
 
 enCount :: [Location] -> Int
 enCount [] = []
-enCount (x:xs) = if (enCheck x) == 1 then do x:enCount l xs else do enCount xs
+enCount (x:xs) = if (enCheck x) == 1 then do x:enCount xs else do enCount xs
 
 squareCycle :: [Square] -> Int
-squareCycle (x:xs) = enChekc(x) + squareCycle xs
+squareCycle (x:xs) = enCheck(x) + squareCycle xs
 
 enCheck :: Square -> Int
 enCheck s = case s of
   Piece Player2 -> 1
   _ -> 0
-
+-}
 --minMax :: Int -> [Move] -> Int
 --minMax acc (x:xs) =
 
