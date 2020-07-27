@@ -26,7 +26,10 @@ greedy st = head (moveSelect (head(evalMoves (legalMoves st) st)) (legalMoves st
 --greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
 --greedy TroubleShooting
 testLoc :: Location
-testLoc = Location 1 2
+testLoc = Location 1 1
+
+testLoc2 :: Location
+testLoc2 = Location 1 2
 
 testMove :: Move
 testMove = Move testLoc testLoc
@@ -88,6 +91,9 @@ readSFL l st = readSquare (locSquare st l)
 readSquare :: Square -> Int
 readSquare sq = case sq of
   Piece Player2 -> 1
+  Piece Player1 -> 2
+  Empty -> 2
+  Block -> 3
   _ -> 0
 
 --Location -> square
@@ -113,7 +119,7 @@ getL2 (Move _ l) = l
 
 getX :: Location -> Int
 getX (Location x _) = x
-getX :: Location -> Int
+getY :: Location -> Int
 getY (Location _ y) = y
 
 {-EvalMovesSystem
