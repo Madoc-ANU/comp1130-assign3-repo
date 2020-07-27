@@ -1,7 +1,7 @@
 {-|
 Module      : AI
 Description : AIs for Ataxx
-Copyright   : (c) 2020 Your Name Here
+Copyright   : (c) 2020 Madoc Thomas Cottle
 License     : AllRightsReserved
 -}
 module AI where
@@ -43,7 +43,7 @@ makeMoveSet st = zip ml vl
         vl = func ml
           where func :: [Move] -> [Int]
                 func [] = []
-                func (x:xs) = testMove x : ml xs
+                func (x:xs) = testMove x st : func xs
 
 
 
