@@ -19,25 +19,37 @@ firstLegalMove :: GameState -> Move
 firstLegalMove st = head (legalMoves st)
 
 protoType :: GameState -> Move
-protoType st = upPack(moveSelect 10 (legalMoves st))
+protoType st = head (moveSelect 10 (legalMoves st))
 
 greedy :: GameState -> Move
-greedy st = unPack(moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
+greedy st = head (moveSelect (head(evalMoves (legalMoves st) st)) (legalMoves st))
+--greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
+--greedy TroubleShooting
+testLoc :: Location
+testLoc = Location 1 2
+
+testMove :: Move
+testMove = Move testLoc testLoc
+
+testState :: GameState
+testState = initialState (9,9)
+
+testTurn :: Turn
+testTurn = Turn Player2
+
+moveList = [testMove, testMove, testMove]
 
 --greedy
+
 moveSelect :: Int -> [Move] -> [Move]
 moveSelect _ [] = []
-moveSelect 1 (x:xs) = x
+moveSelect 1 (x:xs) = x:[]
 moveSelect n (x:xs) = moveSelect (n-1) xs
-
-unPack :: [a] -> a
-unPack [] = []
-unPack (x:xs) = x
-
 
 evalMoves :: [Move] -> GameState -> [Int]
 evalMoves [] _ = []
 evalMoves (x:xs) st = evalMove x st: evalMoves xs st
+evalMoves _ _ = [-1]
 
 evalMove :: Move -> GameState -> Int
 evalMove m st = sumAdjEn (getL2 m) st
@@ -57,12 +69,12 @@ sumList (x:xs) = x + sumList xs
 --List of Locations adjacent to a location within legalMoves
 adjLoc :: Location  -> [Location] -> [Location]
 adjLoc _ [] = []
-adjLoc loc (x:xs) = unPack(chebList loc x): adjLoc loc xs
+adjLoc loc (x:xs) = head(chebList loc x): adjLoc loc xs
 
 chebList :: Location -> Location -> [Location]
 chebList l1 l2 = case (chebyshev l1 l2) of
   1 -> [l2]
-  0 -> []
+  _ -> []
 
 
 --gives Int list representing squares from locations
@@ -94,10 +106,14 @@ find x (n:ns) = find (x-1) (n:ns)
 --
 
 --accessors
-getL1 (Move l1 _) = l1
-getL2 (Move _ l2) = l2
+getL1 :: Move -> Location
+getL1 (Move l _) = l
+getL2 :: Move -> Location
+getL2 (Move _ l) = l
 
+getX :: Location -> Int
 getX (Location x _) = x
+getX :: Location -> Int
 getY (Location _ y) = y
 
 {-EvalMovesSystem
