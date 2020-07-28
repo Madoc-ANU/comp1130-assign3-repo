@@ -59,11 +59,77 @@ makeMoveSet st = zip ml vl
                 func [] = []
                 func (x:xs) = testMove x st : func xs
 
+
 chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
-chooseMoveFrom (x:[]) = x
+chooseMoveFrom (a:[]) = a
+chooseMoveFrom ((a,b):xs)
+  | snd (chooseMoveFrom xs) > b = chooseMoveFrom xs
+  | otherwise = (a,b)
+
+{-
+
+chooseMoveFrom3 :: [(Move, Int)] -> (Move, Int)
+chooseMoveFrom3 (x:xs) = (!!) index (x:xs)
+  where
+    vl = pullValues tl
+    pullValues :: [(Move, Int)] -> [Int]
+    pullValues (q:qs) = snd q : pullValues qs
+    index = getIndex vl
+      where
+        getIndex :: [Int] -> Int -> Int
+        getIndex ref (i:is)
+          | genIndex is > i = getIndex is
+          | otherwise = i
+
+
+-}
+
+
+
+{-}
+
+chooseMoveFrom3 :: [(Move, Int)] -> (Move, Int)
+chooseMoveFrom3 (x:xs) = (!!) index (x:xs)
+  where
+    ml = pullMoves tl
+    vl = pullValues tl
+    pullMoves :: [(Move, Int)] -> [Move]
+    pullMoves (n:ns) = fst n : pullMoves ns
+    pullValues :: [(Move, Int)] -> [Int]
+    pullValues (q:qs) = snd q : pullValues qs
+    index = getIndex vl
+      where
+        getIndex :: [Int] -> Int -> Int
+        getIndex (x:xs)
+          | getLargest (x:xs) == x =
+          | otherwise
+          where
+            getLargest :: [Int] -> [Int]
+            getLargest (i:is)
+              | genIndex is > i = getIndex is
+              | otherwise = i
+
+
+
+
+  chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
+  chooseMoveFrom (x:xs) == (!!) index (x:xs)
+    where index = getIndex
+          getIndex
+
+
+
+
+chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
 chooseMoveFrom (x:xs)
-  | snd (x) > snd (chooseMoveFrom xs) = x
-  | otherwise = chooseMoveFrom xs
+  where getLargest :: [(Move, Int)] -> Int
+        getLargest
+
+
+-}
+tMove :: Move
+tMove = Move testLoc testLoc
+
 
 testLoc :: Location
 testLoc = Location 1 1
@@ -71,8 +137,7 @@ testLoc = Location 1 1
 testLoc2 :: Location
 testLoc2 = Location 1 2
 
-tMove :: Move
-tMove = Move testLoc testLoc
+
 
 testState :: GameState
 testState = initialState (9,9)
