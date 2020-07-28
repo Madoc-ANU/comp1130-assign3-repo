@@ -57,7 +57,7 @@ makeMoveSet st = zip ml vl
                 func [] = []
                 func (x:xs) = testMove x st : func xs
 
-
+--incomplete
 chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
 chooseMoveFrom (a:[]) = a
 chooseMoveFrom ((a,b):xs)
@@ -67,12 +67,12 @@ chooseMoveFrom ((a,b):xs)
 --lookAheadFunctions
 
 lookAheadSet :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
-lookAheadSet _ _ ((a,b):[]) = (a,b):[]
+lookAheadSet _ _ (a:[]) = a:[]
 lookAheadSet st 0 l = l
-lookAheadSet st 1 ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
+lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
   where
     testPath :: GameState -> (Move,Int) -> (Move,Int)
-    testPath st (a,b) = (a, (b + enemyMoveValue (makeCertain (applyMove a tempState))))
+    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
       where
         tempState = st
 
