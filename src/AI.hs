@@ -12,7 +12,7 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("queen", WithLookahead queen)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("queen", WithLookahead queen), ("king", WithLookahead king)
       ]
 
 firstLegalMove :: GameState -> Move
@@ -23,6 +23,9 @@ wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
 
 queen :: GameState -> Int -> Move
 queen st i = fst (chooseMoveFrom (lookAheadSet st i (makeMoveSet st)))
+
+king :: GameState -> Int -> Move
+king st i = fst (chooseMoveFrom (recurLookAhead st i (makeMoveSet st)))
 
 calcHeur :: GameState -> Int
 calcHeur st
@@ -65,12 +68,26 @@ chooseMoveFrom ((a,b):xs)
   | otherwise = (a,b)
 
 --lookAheadFunctions
+recurLookAhead :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+recurLookAhead _ _ (a:[]) = a:[]
+recurLookAhead st 0 l = l
+recurLookAhead st i ((a,b):xs) = recurLookAhead st (i-1) (testPath st (a,b) : recurLookAhead st i xs)
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st = snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st)))
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
+
 
 lookAheadSet :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
 lookAheadSet _ _ (a:[]) = a:[]
 lookAheadSet st 0 l = l
 lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
   where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st = snd (chooseMoveFrom (makeMoveSet st))
     testPath :: GameState -> (Move,Int) -> (Move,Int)
     testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
       where
@@ -78,8 +95,8 @@ lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
 
 --
 
-enemyMoveValue :: GameState -> Int
-enemyMoveValue st = snd (chooseMoveFrom (makeMoveSet st))
+
+
 
 
 {-
