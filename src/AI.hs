@@ -12,11 +12,15 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist)
       ]
 
 firstLegalMove :: GameState -> Move
 firstLegalMove st = head (legalMoves st)
+
+wenKroist :: GameState -> Move
+wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
+
 {-
 protoType :: GameState -> Move
 protoType st = head (moveSelect 10 (legalMoves st))
@@ -25,12 +29,11 @@ greedy :: GameState -> Move
 greedy st = head (moveSelect (head(evalMoves (legalMoves st) st)) (legalMoves st))
 -}
 
-wenKroist :: GameState -> Move
-wenKroist st = fst(chooseMoveFrom(makeMoveSet st))
 
---only works if AI is player 1
+
+--only works if AI is player 2
 calcHeur :: GameState -> Int
-calcHeur st = fst (countPieces st) - snd (countPieces st) + valueBoard st
+calcHeur st = snd (countPieces st) - fst (countPieces st) + valueBoard st
 
 valueBoard :: GameState -> Int
 valueBoard st = 0
@@ -38,16 +41,15 @@ valueBoard st = 0
 
 --dealing with maybe States
 testMove :: Move -> GameState -> Int
-testMove m st = calcHeur (appMove m st)
+testMove m st = calcHeur (appMove m tempState)
   where tempState = st
         appMove :: Move -> GameState -> GameState
-        --really dodgey here
-        appMove m st
-          | applyMove m st /= Nothing = applyMove m st
-          | i == 0 = st
-            where
-              i = 1
+        appMove m st = makeCertain(applyMove m st)
 
+makeCertain :: Maybe GameState -> GameState
+makeCertain st = case st of
+  Nothing -> initialState (9,9)
+  Just st -> st
 
 makeMoveSet :: GameState -> [(Move, Int)]
 makeMoveSet st = zip ml vl
@@ -57,29 +59,20 @@ makeMoveSet st = zip ml vl
                 func [] = []
                 func (x:xs) = testMove x st : func xs
 
-chooseMoveFro :: [(Move, Int)] -> Move
-chooseMoveFro l = fst((!!) l index 0 (intL l))
-  where intL :: [(Move,Int)] -> [Int]
-        intL (x:xs) = snd x : intL xs
-        index :: Int -> [Int] -> Int
-
-
 chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
+chooseMoveFrom (x:[]) = x
 chooseMoveFrom (x:xs)
-  | snd(x) > choseMoveFrom xs = x
-  | otherwise = choseMoveFrom xs
+  | snd (x) > snd (chooseMoveFrom xs) = x
+  | otherwise = chooseMoveFrom xs
 
-{- version 2
---greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
---greedy TroubleShooting
 testLoc :: Location
 testLoc = Location 1 1
 
 testLoc2 :: Location
 testLoc2 = Location 1 2
 
-testMove :: Move
-testMove = Move testLoc testLoc
+tMove :: Move
+tMove = Move testLoc testLoc
 
 testState :: GameState
 testState = initialState (9,9)
@@ -88,6 +81,14 @@ testTurn :: Turn
 testTurn = Turn Player2
 
 moveList = [testMove, testMove, testMove]
+
+
+
+
+{- version 2
+--greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
+--greedy TroubleShooting
+
 
 --greedy
 
