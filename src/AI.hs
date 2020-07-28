@@ -12,7 +12,7 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("Desmond", LookAhead desmond)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("queen", WithLookahead queen)
       ]
 
 firstLegalMove :: GameState -> Move
@@ -21,8 +21,8 @@ firstLegalMove st = head (legalMoves st)
 wenKroist :: GameState -> Move
 wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
 
-desmon :: GameState -> Int -> Move
-desmon st i = fst (chooseMoveFrom (lookAheadSet st i))
+queen :: GameState -> Int -> Move
+queen st i = fst (chooseMoveFrom (lookAheadSet st i (makeMoveSet st)))
 
 calcHeur :: GameState -> Int
 calcHeur st
@@ -67,12 +67,12 @@ chooseMoveFrom ((a,b):xs)
 --lookAheadFunctions
 
 lookAheadSet :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
-lookAheadSet _ _ ((a,b):[]) = (a,b)
-lookAheadSet st 0 _ = fst (chooseMoveFrom (makeMoveSet st))
+lookAheadSet _ _ ((a,b):[]) = (a,b):[]
+lookAheadSet st 0 l = l
 lookAheadSet st 1 ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
   where
     testPath :: GameState -> (Move,Int) -> (Move,Int)
-    testPath st (a,b) = (a, (b + enemyMoveValue (applyMove a tempState)))
+    testPath st (a,b) = (a, (b + enemyMoveValue (makeCertain (applyMove a tempState))))
       where
         tempState = st
 
