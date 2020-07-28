@@ -25,6 +25,9 @@ greedy :: GameState -> Move
 greedy st = head (moveSelect (head(evalMoves (legalMoves st) st)) (legalMoves st))
 -}
 
+wenKroist :: GameState -> Move
+wenKroist st = fst(chooseMoveFrom(makeMoveSet st))
+
 --only works if AI is player 1
 calcHeur :: GameState -> Int
 calcHeur st = fst (countPieces st) - snd (countPieces st) + valueBoard st
@@ -33,9 +36,18 @@ valueBoard :: GameState -> Int
 valueBoard st = 0
   where b = board st
 
+--dealing with maybe States
 testMove :: Move -> GameState -> Int
-testMove m st = calcHeur (applyMove m tempState)
+testMove m st = calcHeur (appMove m st)
   where tempState = st
+        appMove :: Move -> GameState -> GameState
+        --really dodgey here
+        appMove m st
+          | applyMove m st /= Nothing = applyMove m st
+          | i == 0 = st
+            where
+              i = 1
+
 
 makeMoveSet :: GameState -> [(Move, Int)]
 makeMoveSet st = zip ml vl
@@ -45,7 +57,17 @@ makeMoveSet st = zip ml vl
                 func [] = []
                 func (x:xs) = testMove x st : func xs
 
+chooseMoveFro :: [(Move, Int)] -> Move
+chooseMoveFro l = fst((!!) l index 0 (intL l))
+  where intL :: [(Move,Int)] -> [Int]
+        intL (x:xs) = snd x : intL xs
+        index :: Int -> [Int] -> Int
 
+
+chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
+chooseMoveFrom (x:xs)
+  | snd(x) > choseMoveFrom xs = x
+  | otherwise = choseMoveFrom xs
 
 {- version 2
 --greedy st = head (moveSelect (head (evalMoves (legalMoves st) st)) (legalMoves st))
