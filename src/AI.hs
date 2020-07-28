@@ -29,17 +29,16 @@ greedy :: GameState -> Move
 greedy st = head (moveSelect (head(evalMoves (legalMoves st) st)) (legalMoves st))
 -}
 
-
-
---only works if AI is player 2
 calcHeur :: GameState -> Int
-calcHeur st = snd (countPieces st) - fst (countPieces st) + valueBoard st
+calcHeur st
+  | turn st == Turn Player1 = fst (countPieces st) - snd (countPieces st) + valueBoard st
+  | turn st == Turn Player2 = snd (countPieces st) - fst (countPieces st) + valueBoard st
+  | otherwise = 0
+  where
+    valueBoard :: GameState -> Int
+    valueBoard st = 0
+      where b = board st
 
-valueBoard :: GameState -> Int
-valueBoard st = 0
-  where b = board st
-
---dealing with maybe States
 testMove :: Move -> GameState -> Int
 testMove m st = calcHeur (appMove m tempState)
   where tempState = st
