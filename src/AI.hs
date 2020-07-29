@@ -12,29 +12,28 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("basic", NoLookahead basic),
-        ("default", WithLookahead defaultAI), ("wenKroist", NoLookahead wenKroist),
-        ("queen", WithLookahead queen), ("king", Withlookahead king)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("greedy", NoLookahead greedy),
+        ("queen", WithLookahead queen), ("default", WithLookahead king)
       ]
 
 firstLegalMove :: GameState -> Move
-firstLegalMove st = fst(legalMoves st)
+firstLegalMove st = head(legalMoves st)
 
-wenKroist :: GameState -> Move
-wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
+greedy :: GameState -> Move
+greedy st = fst (chooseMoveFrom (makeMoveSet st))
 
 queen :: GameState -> Int -> Move
 queen st i = fst (chooseMoveFrom (lookAheadSet st i (makeMoveSet st)))
 
 king :: GameState -> Int -> Move
-king st i = fst (chooseMoveFrom (recurLookAhead st i (makeMoveSet st)))
-
-basic :: GameState -> Move
-basic st = fst(minMaxMove st 0)
+king st i = fst (chooseMoveFrom (recurLookAhead2 st i (makeMoveSet st)))
+{-}
+basicAI :: GameState -> Move
+basicAI st = fst(minMaxMove st 0)
 
 defaultAI :: GameState -> Int -> Move
 defaultAI st depth = fst(head(minMaxMove st depth))
-
+-}
 calcHeur :: GameState -> Int
 calcHeur st
   | turn st == Turn Player1 = snd (countPieces st) - fst (countPieces st) + valueBoard st 9
@@ -75,6 +74,7 @@ chooseMoveFrom ((a,b):xs)
   | snd (chooseMoveFrom xs) > b = chooseMoveFrom xs
   | otherwise = (a,b)
 
+
 --lookAheadFunctions
 recurLookAhead :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
 recurLookAhead _ _ (a:[]) = a:[]
@@ -101,47 +101,58 @@ lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
       where
         tempState = st
 
+recurLookAhead2 :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+recurLookAhead2 _ _ (a:[]) = a:[]
+recurLookAhead2 st 0 l = l
+recurLookAhead2 st i ((a,b):xs) = recurLookAhead st (i-1) (testPath st (a,b) : recurLookAhead st i xs)
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st
+      | turn st == Turn Player2 = snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st)))
+      | turn st == Turn Player1 = -(snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st))))
+      | otherwise = 100000
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (- enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
 
-
-
+recurLookAhead3 :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+recurLookAhead3 _ _ (a:[]) = a:[]
+recurLookAhead3 st 0 l = l
+recurLookAhead3 st i ((a,b):xs) = recurLookAhead st (i-1) (testPath st (a,b) : recurLookAhead st i xs)
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st
+      | turn st == Turn Player2 = snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st)))
+      | turn st == Turn Player1 = -(snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st))))
+      | otherwise = 100000
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (- enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
 
 -----------------------------
 
 
 --defaultSupport
-makeCertain :: Maybe GameState -> GameState
-makeCertain st = case st of
-  Nothing -> initialState (9,9)
-  Just st -> st
+{-}
+makeStateSet :: GameState -> [(Move,Int)] -> [GameState]
+makeStateSet st (x:[]) = (applyMove fst(x) st)[]
+makeStateSet st ((a,b):xs)= makeCertain (applyMove a st) : makeStateSet st xs
 
-makeMoveSet :: GameState -> [(Move, Int)]
-makeMoveSet st = zip ml vl
-  where ml = legalMoves st
-        vl = func ml
-          where func :: [Move] -> [Int]
-                func [] = []
-                func (x:xs) = testMove x st : func xs
-
-makeStateSet :: [(Move,Int)] -> [GameState]
-makeStateSet (x:[]) = x
-makeStateSet ((a,b):xs)= makeCertain (applyMove a) : makeStateSet xs
-
+-}
+{-
 basic :: GameState -> Int -> [(Move,Int)] -> [(Move, Int)]
-basic st 0 (x:xs) = chooseMoveFrom(st):
-basic st depth l =
+basic st 0 (x:xs) = chooseMoveFrom(st):[]
+basic st depth l = chooseMoveFrom(st):[]
   where
     moves = makeMoveSet st
     states = makeStateSet moves
-
+-}
 --Player 1 is positive
 heur :: GameState -> Int
 heur st = fst (countPieces st) - snd (countPieces st)
 
-testMove :: Move -> GameState -> Int
-testMove m st = heur (appMove m tempState)
-  where tempState = st
-        appMove :: Move -> GameState -> GameState
-        appMove m st = makeCertain(applyMove m st)
 
 
 --incomplete + could be merged
@@ -157,6 +168,7 @@ minMove ((a,b):xs)
   | snd (minMove xs) < b = minMove xs
   | otherwise = (a,b)
 
+{-}
 minMaxMove :: GameState -> Int -> (Move,Int)
 minMaxMove st 0
   | turn st == Turn Player1 = (maxMove (makeMoveSet st))
@@ -173,41 +185,7 @@ minMaxMove st depth
           history :: GameState -> [Board]
           history (State _ _ _ h) = h
 
-
---incomplete
-chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
-chooseMoveFrom (a:[]) = a
-chooseMoveFrom ((a,b):xs)
-  | snd (chooseMoveFrom xs) > b = chooseMoveFrom xs
-  | otherwise = (a,b)
-
---lookAheadFunctions
-recurLookAhead :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
-recurLookAhead _ _ (a:[]) = a:[]
-recurLookAhead st 0 l = l
-recurLookAhead st i ((a,b):xs) = recurLookAhead st (i-1) (testPath st (a,b) : recurLookAhead st i xs)
-  where
-    enemyMoveValue :: GameState -> Int
-    enemyMoveValue st = snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st)))
-    testPath :: GameState -> (Move,Int) -> (Move,Int)
-    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
-      where
-        tempState = st
-
-
-lookAheadSet :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
-lookAheadSet _ _ (a:[]) = a:[]
-lookAheadSet st 0 l = l
-lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
-  where
-    enemyMoveValue :: GameState -> Int
-    enemyMoveValue st = snd (chooseMoveFrom (makeMoveSet st))
-    testPath :: GameState -> (Move,Int) -> (Move,Int)
-    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
-      where
-        tempState = st
-
-
+-}
 
 {-}
 
@@ -509,14 +487,14 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("queen", WithLookahead queen), ("king", WithLookahead king)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("greedy", NoLookahead greedy), ("queen", WithLookahead queen), ("king", WithLookahead king)
       ]
 
 firstLegalMove :: GameState -> Move
 firstLegalMove st = head (legalMoves st)
 
-wenKroist :: GameState -> Move
-wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
+greedy :: GameState -> Move
+greedy st = fst (chooseMoveFrom (makeMoveSet st))
 
 queen :: GameState -> Int -> Move
 queen st i = fst (chooseMoveFrom (lookAheadSet st i (makeMoveSet st)))
