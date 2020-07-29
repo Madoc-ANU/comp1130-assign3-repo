@@ -12,11 +12,13 @@ data AIFunc
   = NoLookahead (GameState -> Move)
   | WithLookahead (GameState -> Int -> Move)
 ais :: [(String, AIFunc)]
-ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("queen", WithLookahead queen), ("king", WithLookahead king)
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("basic", NoLookahead basic),
+        ("default", WithLookahead defaultAI), ("wenKroist", NoLookahead wenKroist),
+        ("queen", WithLookahead queen), ("king", Withlookahead king)
       ]
 
 firstLegalMove :: GameState -> Move
-firstLegalMove st = head (legalMoves st)
+firstLegalMove st = fst(legalMoves st)
 
 wenKroist :: GameState -> Move
 wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
@@ -26,6 +28,12 @@ queen st i = fst (chooseMoveFrom (lookAheadSet st i (makeMoveSet st)))
 
 king :: GameState -> Int -> Move
 king st i = fst (chooseMoveFrom (recurLookAhead st i (makeMoveSet st)))
+
+basic :: GameState -> Move
+basic st = fst(minMaxMove st 0)
+
+defaultAI :: GameState -> Int -> Move
+defaultAI st depth = fst(head(minMaxMove st depth))
 
 calcHeur :: GameState -> Int
 calcHeur st
@@ -93,12 +101,160 @@ lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
       where
         tempState = st
 
---
 
 
 
 
+-----------------------------
 
+
+--defaultSupport
+makeCertain :: Maybe GameState -> GameState
+makeCertain st = case st of
+  Nothing -> initialState (9,9)
+  Just st -> st
+
+makeMoveSet :: GameState -> [(Move, Int)]
+makeMoveSet st = zip ml vl
+  where ml = legalMoves st
+        vl = func ml
+          where func :: [Move] -> [Int]
+                func [] = []
+                func (x:xs) = testMove x st : func xs
+
+makeStateSet :: [(Move,Int)] -> [GameState]
+makeStateSet (x:[]) = x
+makeStateSet ((a,b):xs)= makeCertain (applyMove a) : makeStateSet xs
+
+basic :: GameState -> Int -> [(Move,Int)] -> [(Move, Int)]
+basic st 0 (x:xs) = chooseMoveFrom(st):
+basic st depth l =
+  where
+    moves = makeMoveSet st
+    states = makeStateSet moves
+
+--Player 1 is positive
+heur :: GameState -> Int
+heur st = fst (countPieces st) - snd (countPieces st)
+
+testMove :: Move -> GameState -> Int
+testMove m st = heur (appMove m tempState)
+  where tempState = st
+        appMove :: Move -> GameState -> GameState
+        appMove m st = makeCertain(applyMove m st)
+
+
+--incomplete + could be merged
+maxMove :: [(Move, Int)] -> (Move, Int)
+maxMove (a:[]) = a
+maxMove ((a,b):xs)
+  | snd (maxMove xs) > b = maxMove xs
+  | otherwise = (a,b)
+
+minMove :: [(Move, Int)] -> (Move, Int)
+minMove (a:[]) = a
+minMove ((a,b):xs)
+  | snd (minMove xs) < b = minMove xs
+  | otherwise = (a,b)
+
+minMaxMove :: GameState -> Int -> (Move,Int)
+minMaxMove st 0
+  | turn st == Turn Player1 = (maxMove (makeMoveSet st))
+  | turn st == Turn Player2 = (minMove (makeMoveSet st))
+minMaxMove st depth
+  | turn st == Turn Player1 = minMaxMove newState (depth-1)
+  | turn st == Turn Player2 = minMaxMove newState (depth-1)
+    where
+      stepState = applyMove fst (minMaxMove st 0)
+      newState = flipPlayer st
+      flipPlayer :: GameState -> GameState
+      flipPlayer st = State (otherPlayer (turn st)) (bounds st) (board st) (history st)
+        where
+          history :: GameState -> [Board]
+          history (State _ _ _ h) = h
+
+
+--incomplete
+chooseMoveFrom :: [(Move, Int)] -> (Move, Int)
+chooseMoveFrom (a:[]) = a
+chooseMoveFrom ((a,b):xs)
+  | snd (chooseMoveFrom xs) > b = chooseMoveFrom xs
+  | otherwise = (a,b)
+
+--lookAheadFunctions
+recurLookAhead :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+recurLookAhead _ _ (a:[]) = a:[]
+recurLookAhead st 0 l = l
+recurLookAhead st i ((a,b):xs) = recurLookAhead st (i-1) (testPath st (a,b) : recurLookAhead st i xs)
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st = snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st)))
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
+
+
+lookAheadSet :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+lookAheadSet _ _ (a:[]) = a:[]
+lookAheadSet st 0 l = l
+lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st = snd (chooseMoveFrom (makeMoveSet st))
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
+
+
+
+{-}
+
+minMax :: GameState -> Int -> (Move, Int)
+minMax st 0 = chooseMoveFrom(genMoveSet st)
+minMax st 1 = recur (genMoveSet st)
+  where
+    recur :: -> (Move, Int)
+
+calcHeur :: GameState -> Int
+calcHeur st
+  | turn st == Turn Player1 = fst (countPieces st) - snd (countPieces st) + valueBoard st 9
+  | turn st == Turn Player2 = snd (countPieces st) - fst (countPieces st) + valueBoard st 9
+  | otherwise = 0
+  where
+    valueBoard :: GameState -> Int -> Int
+    valueBoard _ _ = 0
+
+
+
+--lookAheadFunctions
+lookAheadSet :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+lookAheadSet _ _ (a:[]) = a:[]
+lookAheadSet st 0 l = l
+lookAheadSet st _ ((a,b):xs) = testPath st (a,b) : lookAheadSet st 1 xs
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st = snd (chooseMoveFrom (makeMoveSet st))
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
+
+--MinMaxFunctions
+recurLookAhead :: GameState -> Int -> [(Move, Int)] -> [(Move, Int)]
+recurLookAhead _ _ (a:[]) = a:[]
+recurLookAhead st 0 l = l
+recurLookAhead st i ((a,b):xs) = recurLookAhead st (i-1) (testPath st (a,b) : recurLookAhead st i xs)
+  where
+    enemyMoveValue :: GameState -> Int
+    enemyMoveValue st = snd (chooseMoveFrom (recurLookAhead st (i-1) (makeMoveSet st)))
+    testPath :: GameState -> (Move,Int) -> (Move,Int)
+    testPath st (a,b) = (a, (b - enemyMoveValue (makeCertain (applyMove a tempState))))
+      where
+        tempState = st
+
+-}
 {-
 
 {-
@@ -332,4 +488,74 @@ adjEn :: Location -> Int
 adjEn l = sumAdjEn let
   name = expression
   in expression
+-}
+
+--BACKUP
+
+
+{-|
+Module      : AI
+Description : AIs for Ataxx
+Copyright   : (c) 2020 Madoc Thomas Cottle
+License     : AllRightsReserved
+-}
+
+{-}
+module AI where
+
+import Ataxx
+
+data AIFunc
+  = NoLookahead (GameState -> Move)
+  | WithLookahead (GameState -> Int -> Move)
+ais :: [(String, AIFunc)]
+ais = [ ("firstLegalMove", NoLookahead firstLegalMove), ("wenKroist", NoLookahead wenKroist), ("queen", WithLookahead queen), ("king", WithLookahead king)
+      ]
+
+firstLegalMove :: GameState -> Move
+firstLegalMove st = head (legalMoves st)
+
+wenKroist :: GameState -> Move
+wenKroist st = fst (chooseMoveFrom (makeMoveSet st))
+
+queen :: GameState -> Int -> Move
+queen st i = fst (chooseMoveFrom (lookAheadSet st i (makeMoveSet st)))
+
+king :: GameState -> Int -> Move
+king st i = fst (chooseMoveFrom (recurLookAhead st i (makeMoveSet st)))
+
+calcHeur :: GameState -> Int
+calcHeur st
+  | turn st == Turn Player1 = snd (countPieces st) - fst (countPieces st) + valueBoard st 9
+  | turn st == Turn Player2 = fst (countPieces st) - snd (countPieces st) + valueBoard st 9
+  | otherwise = 0
+  where
+    valueBoard :: GameState -> Int -> Int
+    valueBoard _ _ = 0
+    {-}
+    valueBoard st
+      |
+      where b = board st
+-}
+testMove :: Move -> GameState -> Int
+testMove m st = calcHeur (appMove m tempState)
+-- | calcHeur
+  where tempState = st
+        appMove :: Move -> GameState -> GameState
+        appMove m st = makeCertain(applyMove m st)
+
+makeCertain :: Maybe GameState -> GameState
+makeCertain st = case st of
+  Nothing -> initialState (9,9)
+  Just st -> st
+
+makeMoveSet :: GameState -> [(Move, Int)]
+makeMoveSet st = zip ml vl
+  where ml = legalMoves st
+        vl = func ml
+          where func :: [Move] -> [Int]
+                func [] = []
+                func (x:xs) = testMove x st : func xs
+
+
 -}
